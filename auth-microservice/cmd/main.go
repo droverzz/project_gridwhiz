@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
-	"net"
-
 	"auth-microservice/internal/handler"
 	authpb "auth-microservice/proto"
+	"log"
+	"net"
 
 	"google.golang.org/grpc"
 )
@@ -25,4 +24,5 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+
 }
