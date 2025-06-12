@@ -1,4 +1,4 @@
-module authmicroservice
+module auth-microservice
 
 go 1.23.0
 

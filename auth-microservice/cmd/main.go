@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	"authmicroservice/internal/handler"
-	authpb "authmicroservice/proto"
+	"auth-microservice/internal/handler"
+	authpb "auth-microservice/proto"
 
 	"google.golang.org/grpc"
 )
@@ -18,7 +18,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	authService := handler.NewAuthServiceHandler() // จะสร้างต่อด้านล่าง
+	authService := handler.NewAuthServiceHandler()
 	authpb.RegisterAuthServiceServer(grpcServer, authService)
 
 	log.Println("gRPC server is running on port 50051...")

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	authpb "authmicroservice/proto"
+	authpb "auth-microservice/proto"
 )
 
 type AuthServiceHandler struct {
