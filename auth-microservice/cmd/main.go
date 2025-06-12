@@ -1,28 +1,29 @@
 package main
 
 import (
-	"auth-microservice/internal/handler"
-	authpb "auth-microservice/proto"
 	"log"
 	"net"
+	"os"
+
+	"auth-microservice/internal/db"
 
 	"google.golang.org/grpc"
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+	//เชื่อมต่อ MongoDB
+	if err := db.InitMongoDB(os.Getenv("MONGO_URI")); err != nil {
+		log.Fatalf("MongoDB connection error: %v", err)
 	}
 
+	//gRPC server
 	grpcServer := grpc.NewServer()
 
-	authService := handler.NewAuthServiceHandler()
-	authpb.RegisterAuthServiceServer(grpcServer, authService)
-
-	log.Println("gRPC server is running on port 50051...")
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
 	}
 
+	log.Println("🚀 gRPC server started at :50051")
+	grpcServer.Serve(lis)
 }
