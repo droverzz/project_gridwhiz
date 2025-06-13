@@ -629,6 +629,194 @@ func (x *AddRoleResponse) GetSuccess() bool {
 	return false
 }
 
+type ListUsersRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	Page          int64                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int64                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUsersRequest) Reset() {
+	*x = ListUsersRequest{}
+	mi := &file_auth_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUsersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUsersRequest) ProtoMessage() {}
+
+func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUsersRequest.ProtoReflect.Descriptor instead.
+func (*ListUsersRequest) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListUsersRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ListUsersRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *ListUsersRequest) GetPage() int64 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListUsersRequest) GetLimit() int64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type User struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *User) Reset() {
+	*x = User{}
+	mi := &file_auth_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *User) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*User) ProtoMessage() {}
+
+func (x *User) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use User.ProtoReflect.Descriptor instead.
+func (*User) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *User) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *User) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *User) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *User) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+type ListUsersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUsersResponse) Reset() {
+	*x = ListUsersResponse{}
+	mi := &file_auth_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUsersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUsersResponse) ProtoMessage() {}
+
+func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUsersResponse.ProtoReflect.Descriptor instead.
+func (*ListUsersResponse) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListUsersResponse) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
+func (x *ListUsersResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
@@ -668,14 +856,29 @@ const file_auth_proto_rawDesc = "" +
 	"\x0etarget_user_id\x18\x01 \x01(\tR\ftargetUserId\x12\x19\n" +
 	"\bnew_role\x18\x02 \x01(\tR\anewRole\"+\n" +
 	"\x0fAddRoleResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xf8\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"f\n" +
+	"\x10ListUsersRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x03R\x04page\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x03R\x05limit\"T\n" +
+	"\x04User\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
+	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\"K\n" +
+	"\x11ListUsersResponse\x12 \n" +
+	"\x05users\x18\x01 \x03(\v2\n" +
+	".auth.UserR\x05users\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total2\xb6\x03\n" +
 	"\vAuthService\x129\n" +
 	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x16.auth.RegisterResponse\x120\n" +
 	"\x05Login\x12\x12.auth.LoginRequest\x1a\x13.auth.LoginResponse\x123\n" +
 	"\x06Logout\x12\x13.auth.LogoutRequest\x1a\x14.auth.LogoutResponse\x12K\n" +
 	"\x0eUpdateUserRole\x12\x1b.auth.UpdateUserRoleRequest\x1a\x1c.auth.UpdateUserRoleResponse\x12B\n" +
 	"\vGetUserByID\x12\x18.auth.GetUserByIDRequest\x1a\x19.auth.GetUserByIDResponse\x126\n" +
-	"\aAddRole\x12\x14.auth.AddRoleRequest\x1a\x15.auth.AddRoleResponseB Z\x1eauth-microservice/proto;authpbb\x06proto3"
+	"\aAddRole\x12\x14.auth.AddRoleRequest\x1a\x15.auth.AddRoleResponse\x12<\n" +
+	"\tListUsers\x12\x16.auth.ListUsersRequest\x1a\x17.auth.ListUsersResponseB Z\x1eauth-microservice/proto;authpbb\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -689,7 +892,7 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_auth_proto_goTypes = []any{
 	(*RegisterRequest)(nil),        // 0: auth.RegisterRequest
 	(*RegisterResponse)(nil),       // 1: auth.RegisterResponse
@@ -703,25 +906,31 @@ var file_auth_proto_goTypes = []any{
 	(*GetUserByIDResponse)(nil),    // 9: auth.GetUserByIDResponse
 	(*AddRoleRequest)(nil),         // 10: auth.AddRoleRequest
 	(*AddRoleResponse)(nil),        // 11: auth.AddRoleResponse
+	(*ListUsersRequest)(nil),       // 12: auth.ListUsersRequest
+	(*User)(nil),                   // 13: auth.User
+	(*ListUsersResponse)(nil),      // 14: auth.ListUsersResponse
 }
 var file_auth_proto_depIdxs = []int32{
-	0,  // 0: auth.AuthService.Register:input_type -> auth.RegisterRequest
-	2,  // 1: auth.AuthService.Login:input_type -> auth.LoginRequest
-	4,  // 2: auth.AuthService.Logout:input_type -> auth.LogoutRequest
-	6,  // 3: auth.AuthService.UpdateUserRole:input_type -> auth.UpdateUserRoleRequest
-	8,  // 4: auth.AuthService.GetUserByID:input_type -> auth.GetUserByIDRequest
-	10, // 5: auth.AuthService.AddRole:input_type -> auth.AddRoleRequest
-	1,  // 6: auth.AuthService.Register:output_type -> auth.RegisterResponse
-	3,  // 7: auth.AuthService.Login:output_type -> auth.LoginResponse
-	5,  // 8: auth.AuthService.Logout:output_type -> auth.LogoutResponse
-	7,  // 9: auth.AuthService.UpdateUserRole:output_type -> auth.UpdateUserRoleResponse
-	9,  // 10: auth.AuthService.GetUserByID:output_type -> auth.GetUserByIDResponse
-	11, // 11: auth.AuthService.AddRole:output_type -> auth.AddRoleResponse
-	6,  // [6:12] is the sub-list for method output_type
-	0,  // [0:6] is the sub-list for method input_type
-	0,  // [0:0] is the sub-list for extension type_name
-	0,  // [0:0] is the sub-list for extension extendee
-	0,  // [0:0] is the sub-list for field type_name
+	13, // 0: auth.ListUsersResponse.users:type_name -> auth.User
+	0,  // 1: auth.AuthService.Register:input_type -> auth.RegisterRequest
+	2,  // 2: auth.AuthService.Login:input_type -> auth.LoginRequest
+	4,  // 3: auth.AuthService.Logout:input_type -> auth.LogoutRequest
+	6,  // 4: auth.AuthService.UpdateUserRole:input_type -> auth.UpdateUserRoleRequest
+	8,  // 5: auth.AuthService.GetUserByID:input_type -> auth.GetUserByIDRequest
+	10, // 6: auth.AuthService.AddRole:input_type -> auth.AddRoleRequest
+	12, // 7: auth.AuthService.ListUsers:input_type -> auth.ListUsersRequest
+	1,  // 8: auth.AuthService.Register:output_type -> auth.RegisterResponse
+	3,  // 9: auth.AuthService.Login:output_type -> auth.LoginResponse
+	5,  // 10: auth.AuthService.Logout:output_type -> auth.LogoutResponse
+	7,  // 11: auth.AuthService.UpdateUserRole:output_type -> auth.UpdateUserRoleResponse
+	9,  // 12: auth.AuthService.GetUserByID:output_type -> auth.GetUserByIDResponse
+	11, // 13: auth.AuthService.AddRole:output_type -> auth.AddRoleResponse
+	14, // 14: auth.AuthService.ListUsers:output_type -> auth.ListUsersResponse
+	8,  // [8:15] is the sub-list for method output_type
+	1,  // [1:8] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_auth_proto_init() }
@@ -735,7 +944,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -19,6 +19,7 @@ type AuthService interface {
 	Logout(ctx context.Context, token string) error
 	IsAdmin(ctx context.Context, userID primitive.ObjectID) (bool, error)
 	AddRole(ctx context.Context, adminUserID, targetUserID primitive.ObjectID, newRole string) error
+	ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, int64, error)
 }
 
 type authService struct{}
@@ -134,4 +135,31 @@ func (s *authService) AddRole(ctx context.Context, adminUserID, targetUserID pri
 	}
 
 	return repository.UpdateUser(targetUserID, updateData)
+}
+
+func (s *authService) ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, int64, error) {
+	userIDStr, ok := ctx.Value("userID").(string)
+	if !ok {
+		return nil, 0, errors.New("unauthenticated")
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		return nil, 0, errors.New("invalid user id")
+	}
+
+	isAdmin, err := s.IsAdmin(ctx, userID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if !isAdmin {
+		return nil, 0, errors.New("forbidden: only admin can list users")
+	}
+
+	users, total, err := repository.ListUsers(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
 }

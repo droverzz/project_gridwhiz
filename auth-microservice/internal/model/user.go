@@ -15,3 +15,10 @@ type User struct {
 	Deleted   bool               `bson:"deleted"`
 	CreatedAt time.Time          `bson:"created_at"`
 }
+
+type UserFilter struct {
+	Name  string
+	Email string
+	Page  int64
+	Limit int64
+}

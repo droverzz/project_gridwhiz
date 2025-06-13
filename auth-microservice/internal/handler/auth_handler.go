@@ -104,7 +104,6 @@ func (s *AuthServiceHandler) AddRole(ctx context.Context, req *authpb.AddRoleReq
 		return nil, status.Errorf(codes.InvalidArgument, "invalid target user id")
 	}
 
-	// เรียก service logic ตรวจสอบ admin และ update role
 	err = s.authService.AddRole(ctx, adminUserID, targetUserID, req.NewRole)
 	if err != nil {
 		if err.Error() == "forbidden: only admin can update role" {
@@ -114,4 +113,40 @@ func (s *AuthServiceHandler) AddRole(ctx context.Context, req *authpb.AddRoleReq
 	}
 
 	return &authpb.AddRoleResponse{Success: true}, nil
+}
+
+func (s *AuthServiceHandler) ListUsers(ctx context.Context, req *authpb.ListUsersRequest) (*authpb.ListUsersResponse, error) {
+	filter := &model.UserFilter{
+		Name:  req.Name,
+		Email: req.Email,
+		Page:  req.Page,
+		Limit: req.Limit,
+	}
+
+	users, total, err := s.authService.ListUsers(ctx, filter)
+	if err != nil {
+		switch err.Error() {
+		case "unauthenticated":
+			return nil, status.Errorf(codes.Unauthenticated, err.Error())
+		case "forbidden: only admin can list users":
+			return nil, status.Errorf(codes.PermissionDenied, err.Error())
+		default:
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
+
+	var userProtos []*authpb.User
+	for _, u := range users {
+		userProtos = append(userProtos, &authpb.User{
+			Id:    u.ID.Hex(),
+			Name:  u.Name,
+			Email: u.Email,
+			Role:  u.Role,
+		})
+	}
+
+	return &authpb.ListUsersResponse{
+		Users: userProtos,
+		Total: total,
+	}, nil
 }
