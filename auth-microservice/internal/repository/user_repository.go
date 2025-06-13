@@ -102,3 +102,11 @@ func ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, in
 
 	return users, total, nil
 }
+
+func CountUsers(ctx context.Context) (int64, error) {
+	collection := db.GetUserCollection()
+	filter := bson.M{"deleted": false}
+
+	count, err := collection.CountDocuments(ctx, filter)
+	return count, err
+}

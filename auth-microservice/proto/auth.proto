@@ -116,7 +116,7 @@ message DeleteProfileResponse {
   bool success = 1;
 }
 
-message ResetPasswordTokenRequest {}
+message GeneratePasswordResetTokenRequest {}
 
 message GeneratePasswordResetTokenResponse {
   string reset_token = 1;

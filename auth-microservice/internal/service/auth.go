@@ -220,7 +220,7 @@ func (s *authService) GeneratePasswordResetToken(ctx context.Context, userID pri
 	}
 	email := user.Email
 	fmt.Println(email)
-	// สร้าง token
+
 	token, err := utils.GenerateResetToken(user.ID.Hex())
 	if err != nil {
 		return "", err
