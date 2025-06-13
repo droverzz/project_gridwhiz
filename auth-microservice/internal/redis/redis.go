@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v8" // ถ้าเปลี่ยนมาใช้ redis v8 ตามที่แนะนำก่อนหน้านี้
 )
 
 var (

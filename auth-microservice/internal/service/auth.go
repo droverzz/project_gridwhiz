@@ -20,6 +20,8 @@ type AuthService interface {
 	IsAdmin(ctx context.Context, userID primitive.ObjectID) (bool, error)
 	AddRole(ctx context.Context, adminUserID, targetUserID primitive.ObjectID, newRole string) error
 	ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, int64, error)
+	UpdateProfile(ctx context.Context, userID primitive.ObjectID, newName, newEmail string) error
+	DeleteProfile(ctx context.Context, userID primitive.ObjectID) error
 }
 
 type authService struct{}
@@ -162,4 +164,47 @@ func (s *authService) ListUsers(ctx context.Context, filter *model.UserFilter) (
 	}
 
 	return users, total, nil
+}
+
+func (s *authService) UpdateProfile(ctx context.Context, id primitive.ObjectID, newName, newEmail string) error {
+
+	if newEmail != "" && !utils.ValidEmail(newEmail) {
+		return errors.New("invalid email format")
+	}
+
+	updateData := make(map[string]interface{})
+	if newName == "" {
+		return errors.New("Username must not be empty")
+	}
+	if newEmail == "" {
+
+		return errors.New("Email must not be empty")
+	}
+	updateData["name"] = newName
+	updateData["email"] = newEmail
+	if len(updateData) == 0 {
+		return errors.New("no data to update")
+	}
+
+	return repository.UpdateUser(id, updateData)
+}
+
+func (s *authService) DeleteProfile(ctx context.Context, userID primitive.ObjectID) error {
+	user, err := repository.GetUserByID(userID)
+	if err != nil {
+		// ถ้า error มาจาก no documents in result แปลงข้อความ error
+		if err.Error() == "mongo: no documents in result" {
+			return errors.New("user not found")
+		}
+		return err
+	}
+	if user == nil || user.Deleted {
+		return errors.New("user not found")
+	}
+
+	update := map[string]interface{}{
+		"deleted":    true,
+		"updated_at": time.Now(),
+	}
+	return repository.UpdateUser(userID, update)
 }

@@ -1,28 +1,24 @@
 package utils
 
 import (
-	"auth-microservice/internal/redis"
 	"context"
 	"time"
+
+	"auth-microservice/internal/redis"
+
+	"github.com/go-redis/redis_rate/v9"
 )
 
+var limiter = redis_rate.NewLimiter(redis.GetRedisClient())
+
 func RateLimit(ctx context.Context, key string, limit int, window time.Duration) (bool, error) {
-	rdb := redis.GetRedisClient()
-	luaScript := `
-    local current
-    current = redis.call("INCR", KEYS[1])
-    if tonumber(current) == 1 then
-        redis.call("EXPIRE", KEYS[1], ARGV[1])
-    end
-    if tonumber(current) > tonumber(ARGV[2]) then
-        return 0
-    end
-    return 1
-    `
-	res, err := rdb.Eval(ctx, luaScript, []string{key}, int(window.Seconds()), limit).Result()
+	res, err := limiter.Allow(ctx, key, redis_rate.Limit{
+		Rate:   limit,
+		Period: window,
+		Burst:  limit,
+	})
 	if err != nil {
 		return false, err
 	}
-	allowed := res.(int64) == 1
-	return allowed, nil
+	return res.Allowed > 0, nil
 }

@@ -150,3 +150,44 @@ func (s *AuthServiceHandler) ListUsers(ctx context.Context, req *authpb.ListUser
 		Total: total,
 	}, nil
 }
+
+func (s *AuthServiceHandler) UpdateProfile(ctx context.Context, req *authpb.UpdateProfileRequest) (*authpb.UpdateProfileResponse, error) {
+	userIDHex, ok := ctx.Value("user_id").(string)
+	if !ok || userIDHex == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "missing user id in context")
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user id")
+	}
+
+	err = s.authService.UpdateProfile(ctx, userID, req.Name, req.Email)
+	if err != nil {
+		if err.Error() == "invalid email format" {
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &authpb.UpdateProfileResponse{Success: true}, nil
+}
+
+func (s *AuthServiceHandler) DeleteProfile(ctx context.Context, req *authpb.DeleteProfileRequest) (*authpb.DeleteProfileResponse, error) {
+	userIDHex, ok := ctx.Value("user_id").(string)
+	if !ok || userIDHex == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "missing user id in context")
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user id")
+	}
+
+	err = s.authService.DeleteProfile(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &authpb.DeleteProfileResponse{Success: true}, nil
+}

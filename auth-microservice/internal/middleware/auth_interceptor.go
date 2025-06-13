@@ -44,6 +44,6 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 		return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
 	}
 
-	newCtx := context.WithValue(ctx, "userID", userID)
+	newCtx := context.WithValue(ctx, "user_id", userID)
 	return handler(newCtx, req)
 }
