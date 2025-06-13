@@ -95,7 +95,7 @@ func ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, in
 		var u model.User
 		if err := cursor.Decode(&u); err != nil {
 			log.Printf("failed to decode user: %v", err)
-			continue // ข้าม record ที่ decode ไม่ได้
+			continue
 		}
 		users = append(users, &u)
 	}

@@ -3,11 +3,13 @@ package db
 import (
 	"auth-microservice/internal/model"
 	"context"
+	"errors"
 	"log"
 	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -88,4 +90,22 @@ func FindUsers(ctx context.Context, filter model.UserFilter) ([]model.User, int6
 	}
 
 	return users, total, nil
+}
+
+func UpdatePassword(ctx context.Context, userID primitive.ObjectID, hashedPassword string) error {
+	collection := GetUserCollection()
+
+	filter := bson.M{"_id": userID}
+	update := bson.M{"$set": bson.M{"password": hashedPassword}}
+
+	result, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
 }

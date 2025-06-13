@@ -15,6 +15,9 @@ service AuthService {
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc DeleteProfile(DeleteProfileRequest) returns (DeleteProfileResponse);
+  rpc GeneratePasswordResetToken(GeneratePasswordResetTokenRequest) returns (GeneratePasswordResetTokenResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  
 }
 
 message RegisterRequest {
@@ -110,5 +113,20 @@ message UpdateProfileResponse {
 message DeleteProfileRequest {}
 
 message DeleteProfileResponse {
+  bool success = 1;
+}
+
+message ResetPasswordTokenRequest {}
+
+message GeneratePasswordResetTokenResponse {
+  string reset_token = 1;
+}
+
+message ResetPasswordRequest {
+  string reset_token = 1;
+  string new_password = 2;
+}
+
+message ResetPasswordResponse {
   bool success = 1;
 }

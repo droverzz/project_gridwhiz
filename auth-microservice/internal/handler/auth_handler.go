@@ -191,3 +191,35 @@ func (s *AuthServiceHandler) DeleteProfile(ctx context.Context, req *authpb.Dele
 
 	return &authpb.DeleteProfileResponse{Success: true}, nil
 }
+
+func (s *AuthServiceHandler) GeneratePasswordResetToken(ctx context.Context, req *authpb.GeneratePasswordResetTokenRequest) (*authpb.GeneratePasswordResetTokenResponse, error) {
+	userIDHex, ok := ctx.Value("user_id").(string)
+	if !ok || userIDHex == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "missing user id in context")
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user id")
+	}
+
+	token, err := s.authService.GeneratePasswordResetToken(ctx, userID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate reset token")
+	}
+
+	return &authpb.GeneratePasswordResetTokenResponse{
+		ResetToken: token,
+	}, nil
+}
+
+func (s *AuthServiceHandler) ResetPassword(ctx context.Context, req *authpb.ResetPasswordRequest) (*authpb.ResetPasswordResponse, error) {
+	err := s.authService.ResetPassword(ctx, req.ResetToken, req.NewPassword)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	return &authpb.ResetPasswordResponse{
+		Success: true,
+	}, nil
+}

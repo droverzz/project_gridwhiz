@@ -1,6 +1,8 @@
 package service
 
 import (
+	"auth-microservice/internal/db"
+
 	"auth-microservice/internal/model"
 	"auth-microservice/internal/repository"
 	"auth-microservice/internal/utils"
@@ -22,6 +24,8 @@ type AuthService interface {
 	ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, int64, error)
 	UpdateProfile(ctx context.Context, userID primitive.ObjectID, newName, newEmail string) error
 	DeleteProfile(ctx context.Context, userID primitive.ObjectID) error
+	GeneratePasswordResetToken(ctx context.Context, userID primitive.ObjectID) (string, error)
+	ResetPassword(ctx context.Context, resetToken, newPassword string) error
 }
 
 type authService struct{}
@@ -207,4 +211,45 @@ func (s *authService) DeleteProfile(ctx context.Context, userID primitive.Object
 		"updated_at": time.Now(),
 	}
 	return repository.UpdateUser(userID, update)
+}
+
+func (s *authService) GeneratePasswordResetToken(ctx context.Context, userID primitive.ObjectID) (string, error) {
+	user, err := s.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	email := user.Email
+	fmt.Println(email)
+	// สร้าง token
+	token, err := utils.GenerateResetToken(user.ID.Hex())
+	if err != nil {
+		return "", err
+	}
+
+	//  mock ไม่ส่งเมลจริง
+	return token, nil
+}
+
+func (s *authService) ResetPassword(ctx context.Context, resetToken, newPassword string) error {
+	userIDHex, err := utils.ValidateResetToken(resetToken)
+	if err != nil {
+		return err
+	}
+
+	userID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	err = db.UpdatePassword(ctx, userID, hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
