@@ -14,12 +14,11 @@ import (
 func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
 	skipAuthMethods := map[string]bool{
-		"/proto.auth/Register": true,
-		"/proto.auth/Login":    true,
+		"/auth.AuthService/Register": true,
+		"/auth.AuthService/Login":    true,
 	}
 
 	if skipAuthMethods[info.FullMethod] {
-
 		return handler(ctx, req)
 	}
 
@@ -34,6 +33,12 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 	}
 
 	tokenString := authHeaders[0]
+
+	const bearerPrefix = "Bearer "
+	if len(tokenString) > len(bearerPrefix) && tokenString[:len(bearerPrefix)] == bearerPrefix {
+		tokenString = tokenString[len(bearerPrefix):]
+	}
+
 	userID, err := utils.ExtractUserIDFromJWT(tokenString)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
