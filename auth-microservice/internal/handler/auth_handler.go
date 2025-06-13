@@ -1,33 +1,69 @@
 package handler
 
 import (
+	"auth-microservice/internal/service"
 	"context"
 	"log"
 
 	authpb "auth-microservice/proto"
+
+	"auth-microservice/internal/model"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type AuthServiceHandler struct {
 	authpb.UnimplementedAuthServiceServer
+	authService service.AuthService
 }
 
-func NewAuthServiceHandler() *AuthServiceHandler {
-	return &AuthServiceHandler{}
+func NewAuthServiceHandler(authService service.AuthService) *AuthServiceHandler {
+	return &AuthServiceHandler{authService: authService}
 }
 
 func (s *AuthServiceHandler) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	log.Printf("Register: email=%s, name=%s", req.Email, req.Name)
+	user := &model.User{
+		Email:    req.Email,
+		Password: req.Password,
+		Name:     req.Name,
+	}
+
+	err := s.authService.Register(ctx, user)
+	if err != nil {
+		log.Printf("Register failed: %v", err)
+		return nil, status.Errorf(codes.Internal, "registration failed")
+	}
 
 	return &authpb.RegisterResponse{
-		Id:    "mock-id-123",
-		Email: req.Email,
+		Id:      user.ID.Hex(),
+		Email:   user.Email,
+		Message: "registration successful",
 	}, nil
 }
 
 func (s *AuthServiceHandler) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	log.Printf("Login: email=%s", req.Email)
+	token, err := s.authService.Login(ctx, req.Email, req.Password)
+	if err != nil {
+		log.Printf("Login failed: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials")
+	}
 
 	return &authpb.LoginResponse{
-		Token: "mock-jwt-token",
+		Token:   token,
+		Message: "login successful",
+	}, nil
+}
+
+func (s *AuthServiceHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
+	err := s.authService.Logout(ctx, req.Token)
+	if err != nil {
+		log.Printf("Logout failed: %v", err)
+		return nil, status.Errorf(codes.Internal, "logout failed")
+	}
+
+	return &authpb.LogoutResponse{
+		Success: true,
+		Message: "logout successful",
 	}, nil
 }

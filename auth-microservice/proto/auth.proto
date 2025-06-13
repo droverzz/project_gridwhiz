@@ -20,6 +20,7 @@ message RegisterRequest {
 message RegisterResponse {
   string id = 1;
   string email = 2;
+  string message = 3;
 }
 
 message LoginRequest {
@@ -29,6 +30,7 @@ message LoginRequest {
 
 message LoginResponse {
   string token = 1;
+  string message = 2;
 }
 
 message LogoutRequest {
@@ -37,4 +39,5 @@ message LogoutRequest {
 
 message LogoutResponse {
   bool success = 1;
+  string message = 2;
 }

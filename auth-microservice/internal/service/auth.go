@@ -25,6 +25,18 @@ func NewAuthService() AuthService {
 }
 
 func (s *authService) Register(ctx context.Context, user *model.User) error {
+	if user.Email == "" || user.Password == "" || user.Name == "" {
+		return errors.New("email, password and name must not be empty")
+	}
+
+	if !utils.ValidEmail(user.Email) {
+		return errors.New("invalid email format")
+	}
+
+	if !utils.ValidPassword(user.Password) {
+		return errors.New("password must be at least 8 characters long and include uppercase, lowercase, and number")
+	}
+
 	existing, err := repository.GetUserByEmail(user.Email)
 	if err == nil && existing != nil {
 		return errors.New("user already exists")
@@ -44,6 +56,10 @@ func (s *authService) Register(ctx context.Context, user *model.User) error {
 }
 
 func (s *authService) Login(ctx context.Context, email, password string) (string, error) {
+	if email == "" || password == "" {
+		return "", errors.New("email and password must not be empty")
+	}
+
 	user, err := repository.GetUserByEmail(email)
 	if err != nil || user == nil {
 		return "", errors.New("invalid credentials")
