@@ -9,6 +9,7 @@ import (
 
 	"auth-microservice/internal/model"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -27,6 +28,7 @@ func (s *AuthServiceHandler) Register(ctx context.Context, req *authpb.RegisterR
 		Email:    req.Email,
 		Password: req.Password,
 		Name:     req.Name,
+		Role:     "user",
 	}
 
 	err := s.authService.Register(ctx, user)
@@ -38,6 +40,7 @@ func (s *AuthServiceHandler) Register(ctx context.Context, req *authpb.RegisterR
 	return &authpb.RegisterResponse{
 		Id:    user.ID.Hex(),
 		Email: user.Email,
+		Role:  user.Role,
 	}, nil
 }
 
@@ -63,4 +66,52 @@ func (s *AuthServiceHandler) Logout(ctx context.Context, req *authpb.LogoutReque
 	return &authpb.LogoutResponse{
 		Success: true,
 	}, nil
+}
+
+func (s *AuthServiceHandler) GetUserByID(ctx context.Context, req *authpb.GetUserByIDRequest) (*authpb.GetUserByIDResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user id")
+	}
+
+	user, err := s.authService.GetUserByID(ctx, objectID)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "user not found")
+	}
+
+	return &authpb.GetUserByIDResponse{
+		Id:    user.ID.Hex(),
+		Name:  user.Name,
+		Email: user.Email,
+		Role:  user.Role,
+	}, nil
+}
+
+func (s *AuthServiceHandler) AddRole(ctx context.Context, req *authpb.AddRoleRequest) (*authpb.AddRoleResponse, error) {
+
+	adminUserIDHex, ok := ctx.Value("user_id").(string)
+	if !ok || adminUserIDHex == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "missing user id in context")
+	}
+
+	adminUserID, err := primitive.ObjectIDFromHex(adminUserIDHex)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid admin user id")
+	}
+
+	targetUserID, err := primitive.ObjectIDFromHex(req.TargetUserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid target user id")
+	}
+
+	// เรียก service logic ตรวจสอบ admin และ update role
+	err = s.authService.AddRole(ctx, adminUserID, targetUserID, req.NewRole)
+	if err != nil {
+		if err.Error() == "forbidden: only admin can update role" {
+			return nil, status.Errorf(codes.PermissionDenied, err.Error())
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &authpb.AddRoleResponse{Success: true}, nil
 }

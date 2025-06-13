@@ -13,7 +13,17 @@ const BLACKLIST_COLLECTION = "blacklisted_tokens"
 
 func BlacklistToken(token string, exp time.Time) error {
 	col := db.GetCollection(DB_NAME, BLACKLIST_COLLECTION)
-	_, err := col.InsertOne(context.TODO(), model.BlacklistedToken{
+
+	count, err := col.CountDocuments(context.TODO(), bson.M{"token": token})
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+
+		return nil
+	}
+
+	_, err = col.InsertOne(context.TODO(), model.BlacklistedToken{
 		Token:     token,
 		ExpiredAt: exp,
 	})

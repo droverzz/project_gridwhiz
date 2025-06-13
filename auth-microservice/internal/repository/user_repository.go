@@ -43,3 +43,15 @@ func GetUserByID(id primitive.ObjectID) (*models.User, error) {
 	err := collection.FindOne(ctx, bson.M{"_id": id, "deleted": false}).Decode(&user)
 	return &user, err
 }
+
+func UpdateUser(userID primitive.ObjectID, updateData map[string]interface{}) error {
+	collection := db.GetCollection(DB_NAME, USER_COLLECTION)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": userID, "deleted": false}
+	update := bson.M{"$set": updateData}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	return err
+}

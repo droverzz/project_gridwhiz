@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
 
 	"auth-microservice/internal/db"
 	"auth-microservice/internal/handler"
+	"auth-microservice/internal/middleware"
+
+	"auth-microservice/internal/redis"
 	"auth-microservice/internal/service"
 	authpb "auth-microservice/proto"
 
@@ -20,22 +25,25 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	// เชื่อมต่อ MongoDB
+	err = redis.Ping(context.Background())
+	if err != nil {
+		log.Fatalf(" Redis not connected: %v", err)
+	}
+	fmt.Println("Redis connected")
+
 	if err := db.InitMongoDB(os.Getenv("MONGO_URI")); err != nil {
 		log.Fatalf("MongoDB connection error: %v", err)
 	}
 
-	// สร้าง gRPC server
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.AuthInterceptor),
+	)
 
-	// สร้าง AuthService และ Handler
 	authService := service.NewAuthService()
 	authHandler := handler.NewAuthServiceHandler(authService)
 
-	// ผูก AuthService กับ gRPC server
 	authpb.RegisterAuthServiceServer(grpcServer, authHandler)
 
-	// เริ่มฟังพอร์ต
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)

@@ -9,6 +9,9 @@ service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc UpdateUserRole(UpdateUserRoleRequest) returns (UpdateUserRoleResponse);
+  rpc GetUserByID(GetUserByIDRequest) returns (GetUserByIDResponse);
+    rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
 }
 
 message RegisterRequest {
@@ -20,6 +23,7 @@ message RegisterRequest {
 message RegisterResponse {
   string id = 1;
   string email = 2;
+  string role = 3; 
   
 }
 
@@ -38,5 +42,36 @@ message LogoutRequest {
 }
 
 message LogoutResponse {
+  bool success = 1;
+}
+
+message UpdateUserRoleRequest {
+  string user_id = 1;
+  string role = 2; // "user" หรือ "admin"
+}
+
+message UpdateUserRoleResponse {
+  bool success = 1;
+}
+
+message GetUserByIDRequest {
+  string id = 1;
+}
+
+message GetUserByIDResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string role = 4;
+}
+
+
+
+message AddRoleRequest {
+  string target_user_id = 1;
+  string new_role = 2;
+}
+
+message AddRoleResponse {
   bool success = 1;
 }

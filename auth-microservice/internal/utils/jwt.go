@@ -57,3 +57,39 @@ func ParseJWT(tokenStr string) (string, map[string]interface{}, error) {
 	userID := claims["user_id"].(string)
 	return userID, claims, nil
 }
+
+func ExtractUserIDFromJWT(tokenString string) (string, error) {
+	if tokenString == "" {
+		return "", errors.New("token is empty")
+	}
+
+	secretKey := []byte("your-secret-key")
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return secretKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		return "", errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("cannot parse claims")
+	}
+
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		// บางระบบเก็บเป็น "sub" หรือ key อื่น ก็แก้ได้ตามนี้
+		userID, ok = claims["sub"].(string)
+		if !ok {
+			return "", errors.New("user_id not found in token claims")
+		}
+	}
+
+	return userID, nil
+}

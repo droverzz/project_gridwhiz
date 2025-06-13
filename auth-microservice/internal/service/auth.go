@@ -6,6 +6,7 @@ import (
 	"auth-microservice/internal/utils"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,6 +17,8 @@ type AuthService interface {
 	Login(ctx context.Context, email, password string) (string, error)
 	GetUserByID(ctx context.Context, id primitive.ObjectID) (*model.User, error)
 	Logout(ctx context.Context, token string) error
+	IsAdmin(ctx context.Context, userID primitive.ObjectID) (bool, error)
+	AddRole(ctx context.Context, adminUserID, targetUserID primitive.ObjectID, newRole string) error
 }
 
 type authService struct{}
@@ -65,18 +68,17 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 		return "", errors.New("invalid credentials")
 	}
 
-	if !utils.CheckPasswordHash(password, user.Password) {
-		return "", errors.New("invalid credentials")
+	key := fmt.Sprintf("login_attempts:%s", email)
+	allowed, err := utils.RateLimit(ctx, key, 5, time.Minute)
+	if err != nil {
+		return "", err
+	}
+	if !allowed {
+		return "", errors.New("too many login attempts, please try again later")
 	}
 
-	activeToken, err := repository.GetActiveTokenByUserID(user.ID)
-	if err == nil && activeToken != "" {
-		// เช็คว่า token ยังไม่หมดอายุ และยังไม่ถูก blacklist
-		if !utils.IsTokenExpired(activeToken) && !repository.IsTokenBlacklisted(activeToken) {
-			// ถ้ายัง valid ให้ return token เดิม
-			return activeToken, nil
-		}
-		// ถ้า token หมดอายุ หรือ ถูก blacklist ก็ไปสร้างใหม่
+	if !utils.CheckPasswordHash(password, user.Password) {
+		return "", errors.New("invalid credentials")
 	}
 
 	token, err := utils.GenerateJWT(user.ID.Hex())
@@ -101,4 +103,35 @@ func (s *authService) Logout(ctx context.Context, token string) error {
 	exp := time.Unix(expUnix, 0)
 
 	return repository.BlacklistToken(token, exp)
+}
+
+func (s *authService) IsAdmin(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	user, err := repository.GetUserByID(id)
+	if err != nil {
+		return false, err
+	}
+	if user == nil {
+		return false, errors.New("user not found")
+	}
+	return user.Role == "admin", nil
+}
+
+func (s *authService) AddRole(ctx context.Context, adminUserID, targetUserID primitive.ObjectID, newRole string) error {
+	isAdmin, err := s.IsAdmin(ctx, adminUserID)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return errors.New("forbidden: only admin can update role")
+	}
+
+	if newRole != "user" && newRole != "admin" {
+		return errors.New("invalid role: must be 'user' or 'admin'")
+	}
+
+	updateData := map[string]interface{}{
+		"role": newRole,
+	}
+
+	return repository.UpdateUser(targetUserID, updateData)
 }
