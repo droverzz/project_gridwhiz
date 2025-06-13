@@ -69,6 +69,16 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 		return "", errors.New("invalid credentials")
 	}
 
+	activeToken, err := repository.GetActiveTokenByUserID(user.ID)
+	if err == nil && activeToken != "" {
+		// เช็คว่า token ยังไม่หมดอายุ และยังไม่ถูก blacklist
+		if !utils.IsTokenExpired(activeToken) && !repository.IsTokenBlacklisted(activeToken) {
+			// ถ้ายัง valid ให้ return token เดิม
+			return activeToken, nil
+		}
+		// ถ้า token หมดอายุ หรือ ถูก blacklist ก็ไปสร้างใหม่
+	}
+
 	token, err := utils.GenerateJWT(user.ID.Hex())
 	if err != nil {
 		return "", err

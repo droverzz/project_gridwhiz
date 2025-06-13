@@ -34,11 +34,10 @@ func (s *AuthServiceHandler) Register(ctx context.Context, req *authpb.RegisterR
 		log.Printf("Register failed: %v", err)
 		return nil, status.Errorf(codes.Internal, "registration failed")
 	}
-
+	log.Printf("Register success")
 	return &authpb.RegisterResponse{
-		Id:      user.ID.Hex(),
-		Email:   user.Email,
-		Message: "registration successful",
+		Id:    user.ID.Hex(),
+		Email: user.Email,
 	}, nil
 }
 
@@ -48,10 +47,9 @@ func (s *AuthServiceHandler) Login(ctx context.Context, req *authpb.LoginRequest
 		log.Printf("Login failed: %v", err)
 		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials")
 	}
-
+	log.Printf("Login success")
 	return &authpb.LoginResponse{
-		Token:   token,
-		Message: "login successful",
+		Token: token,
 	}, nil
 }
 
@@ -61,9 +59,8 @@ func (s *AuthServiceHandler) Logout(ctx context.Context, req *authpb.LogoutReque
 		log.Printf("Logout failed: %v", err)
 		return nil, status.Errorf(codes.Internal, "logout failed")
 	}
-
+	log.Printf("Logout success")
 	return &authpb.LogoutResponse{
 		Success: true,
-		Message: "logout successful",
 	}, nil
 }
