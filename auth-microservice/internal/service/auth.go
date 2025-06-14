@@ -144,7 +144,7 @@ func (s *authService) AddRole(ctx context.Context, adminUserID, targetUserID pri
 }
 
 func (s *authService) ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, int64, error) {
-	userIDStr, ok := ctx.Value("userID").(string)
+	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {
 		return nil, 0, errors.New("unauthenticated")
 	}
