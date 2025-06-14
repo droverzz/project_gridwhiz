@@ -11,8 +11,6 @@
 
 ```bash
 git clone https://github.com/droverzz/project_gridwhiz.git
-cd project_gridwhiz
-pip install -r requirements.txt
 ```
 
 ---
