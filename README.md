@@ -17,6 +17,11 @@ pip install -r requirements.txt
 
 ---
 
+## API Documentation
+
+- The full gRPC API contract is defined in [proto/auth.proto](proto/auth.proto).
+- Example requests and usage for each endpoint are available in [docs/api.md](docs/api.md).
+
 ## Testing
 
 ---
