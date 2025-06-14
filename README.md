@@ -11,6 +11,9 @@
 
 ```bash
 git clone https://github.com/droverzz/project_gridwhiz.git
+cd \auth-microservice\cmd
+redis-server
+go run main.go
 ```
 
 ---
