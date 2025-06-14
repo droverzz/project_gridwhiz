@@ -25,6 +25,25 @@ func NewAuthServiceHandler(authService service.AuthService) *AuthServiceHandler 
 	return &AuthServiceHandler{authService: authService}
 }
 
+func grpcErrorFromService(err error) error {
+	switch err {
+	case nil:
+		return nil
+	case service.ErrInvalidCredentials, service.ErrUnauthenticated:
+		return status.Error(codes.Unauthenticated, err.Error())
+	case service.ErrForbidden:
+		return status.Error(codes.PermissionDenied, err.Error())
+	case service.ErrUserExists:
+		return status.Error(codes.AlreadyExists, err.Error())
+	case service.ErrNotFound:
+		return status.Error(codes.NotFound, err.Error())
+	case service.ErrInvalidArgument:
+		return status.Error(codes.InvalidArgument, err.Error())
+	default:
+		return status.Error(codes.Internal, err.Error())
+	}
+}
+
 func (s *AuthServiceHandler) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
 	user := &model.User{
 		Email:    req.Email,
@@ -36,7 +55,7 @@ func (s *AuthServiceHandler) Register(ctx context.Context, req *authpb.RegisterR
 	err := s.authService.Register(ctx, user)
 	if err != nil {
 		log.Printf("Register failed: %v", err)
-		return nil, status.Errorf(codes.Internal, "registration failed")
+		return nil, grpcErrorFromService(err)
 	}
 	log.Printf("Register success")
 	return &authpb.RegisterResponse{
@@ -50,7 +69,7 @@ func (s *AuthServiceHandler) Login(ctx context.Context, req *authpb.LoginRequest
 	token, err := s.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		log.Printf("Login failed: %v", err)
-		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials")
+		return nil, grpcErrorFromService(err)
 	}
 	log.Printf("Login success")
 	return &authpb.LoginResponse{
@@ -80,7 +99,7 @@ func (s *AuthServiceHandler) Logout(ctx context.Context, req *authpb.LogoutReque
 	err := s.authService.Logout(ctx, tokenString)
 	if err != nil {
 		log.Printf("Logout failed: %v", err)
-		return nil, status.Errorf(codes.Internal, "logout failed")
+		return nil, grpcErrorFromService(err)
 	}
 	log.Printf("Logout success")
 	return &authpb.LogoutResponse{
@@ -96,7 +115,7 @@ func (s *AuthServiceHandler) GetUserByID(ctx context.Context, req *authpb.GetUse
 
 	user, err := s.authService.GetUserByID(ctx, objectID)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not found")
+		return nil, grpcErrorFromService(err)
 	}
 
 	return &authpb.GetUserByIDResponse{
@@ -108,7 +127,6 @@ func (s *AuthServiceHandler) GetUserByID(ctx context.Context, req *authpb.GetUse
 }
 
 func (s *AuthServiceHandler) AddRole(ctx context.Context, req *authpb.AddRoleRequest) (*authpb.AddRoleResponse, error) {
-
 	adminUserIDHex, ok := ctx.Value("user_id").(string)
 	if !ok || adminUserIDHex == "" {
 		return nil, status.Errorf(codes.Unauthenticated, "missing user id in context")
@@ -126,10 +144,7 @@ func (s *AuthServiceHandler) AddRole(ctx context.Context, req *authpb.AddRoleReq
 
 	err = s.authService.AddRole(ctx, adminUserID, targetUserID, req.NewRole)
 	if err != nil {
-		if err.Error() == "forbidden: only admin can update role" {
-			return nil, status.Errorf(codes.PermissionDenied, err.Error())
-		}
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, grpcErrorFromService(err)
 	}
 
 	return &authpb.AddRoleResponse{Success: true}, nil
@@ -145,14 +160,7 @@ func (s *AuthServiceHandler) ListUsers(ctx context.Context, req *authpb.ListUser
 
 	users, total, err := s.authService.ListUsers(ctx, filter)
 	if err != nil {
-		switch err.Error() {
-		case "unauthenticated":
-			return nil, status.Errorf(codes.Unauthenticated, err.Error())
-		case "forbidden: only admin can list users":
-			return nil, status.Errorf(codes.PermissionDenied, err.Error())
-		default:
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
+		return nil, grpcErrorFromService(err)
 	}
 
 	var userProtos []*authpb.User
@@ -184,10 +192,7 @@ func (s *AuthServiceHandler) UpdateProfile(ctx context.Context, req *authpb.Upda
 
 	err = s.authService.UpdateProfile(ctx, userID, req.Name, req.Email)
 	if err != nil {
-		if err.Error() == "invalid email format" {
-			return nil, status.Errorf(codes.InvalidArgument, err.Error())
-		}
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, grpcErrorFromService(err)
 	}
 
 	return &authpb.UpdateProfileResponse{Success: true}, nil
@@ -206,7 +211,7 @@ func (s *AuthServiceHandler) DeleteProfile(ctx context.Context, req *authpb.Dele
 
 	err = s.authService.DeleteProfile(ctx, userID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, grpcErrorFromService(err)
 	}
 
 	return &authpb.DeleteProfileResponse{Success: true}, nil
@@ -225,7 +230,7 @@ func (s *AuthServiceHandler) GeneratePasswordResetToken(ctx context.Context, req
 
 	token, err := s.authService.GeneratePasswordResetToken(ctx, userID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate reset token")
+		return nil, grpcErrorFromService(err)
 	}
 
 	return &authpb.GeneratePasswordResetTokenResponse{
@@ -236,7 +241,7 @@ func (s *AuthServiceHandler) GeneratePasswordResetToken(ctx context.Context, req
 func (s *AuthServiceHandler) ResetPassword(ctx context.Context, req *authpb.ResetPasswordRequest) (*authpb.ResetPasswordResponse, error) {
 	err := s.authService.ResetPassword(ctx, req.ResetToken, req.NewPassword)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		return nil, grpcErrorFromService(err)
 	}
 
 	return &authpb.ResetPasswordResponse{

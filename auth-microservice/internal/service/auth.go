@@ -2,7 +2,6 @@ package service
 
 import (
 	"auth-microservice/internal/db"
-
 	"auth-microservice/internal/model"
 	"auth-microservice/internal/repository"
 	"auth-microservice/internal/utils"
@@ -12,6 +11,15 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserExists         = errors.New("user already exists")
+	ErrForbidden          = errors.New("forbidden")
+	ErrUnauthenticated    = errors.New("unauthenticated")
+	ErrNotFound           = errors.New("not found")
+	ErrInvalidArgument    = errors.New("invalid argument")
 )
 
 type AuthService interface {
@@ -36,20 +44,20 @@ func NewAuthService() AuthService {
 
 func (s *authService) Register(ctx context.Context, user *model.User) error {
 	if user.Email == "" || user.Password == "" || user.Name == "" {
-		return errors.New("email, password and name must not be empty")
+		return ErrInvalidArgument
 	}
 
 	if !utils.ValidEmail(user.Email) {
-		return errors.New("invalid email format")
+		return ErrInvalidArgument
 	}
 
 	if !utils.ValidPassword(user.Password) {
-		return errors.New("password must be at least 8 characters long and include uppercase, lowercase, and number")
+		return ErrInvalidArgument
 	}
 
 	existing, err := repository.GetUserByEmail(user.Email)
 	if err == nil && existing != nil {
-		return errors.New("user already exists")
+		return ErrUserExists
 	}
 
 	hashedPassword, err := utils.HashPassword(user.Password)
@@ -67,12 +75,12 @@ func (s *authService) Register(ctx context.Context, user *model.User) error {
 
 func (s *authService) Login(ctx context.Context, email, password string) (string, error) {
 	if email == "" || password == "" {
-		return "", errors.New("email and password must not be empty")
+		return "", ErrInvalidArgument
 	}
 
 	user, err := repository.GetUserByEmail(email)
 	if err != nil || user == nil {
-		return "", errors.New("invalid credentials")
+		return "", ErrInvalidCredentials
 	}
 
 	key := fmt.Sprintf("login_attempts:%s", email)
@@ -81,11 +89,11 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 		return "", err
 	}
 	if !allowed {
-		return "", errors.New("too many login attempts, please try again later")
+		return "", ErrForbidden
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
-		return "", errors.New("invalid credentials")
+		return "", ErrInvalidCredentials
 	}
 
 	token, err := utils.GenerateJWT(user.ID.Hex())
@@ -97,13 +105,17 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 }
 
 func (s *authService) GetUserByID(ctx context.Context, id primitive.ObjectID) (*model.User, error) {
-	return repository.GetUserByID(id)
+	user, err := repository.GetUserByID(id)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+	return user, nil
 }
 
 func (s *authService) Logout(ctx context.Context, token string) error {
 	_, claims, err := utils.ParseJWT(token)
 	if err != nil {
-		return err
+		return ErrUnauthenticated
 	}
 
 	expUnix := int64(claims["exp"].(float64))
@@ -115,10 +127,10 @@ func (s *authService) Logout(ctx context.Context, token string) error {
 func (s *authService) IsAdmin(ctx context.Context, id primitive.ObjectID) (bool, error) {
 	user, err := repository.GetUserByID(id)
 	if err != nil {
-		return false, err
+		return false, ErrNotFound
 	}
 	if user == nil {
-		return false, errors.New("user not found")
+		return false, ErrNotFound
 	}
 	return user.Role == "admin", nil
 }
@@ -129,11 +141,11 @@ func (s *authService) AddRole(ctx context.Context, adminUserID, targetUserID pri
 		return err
 	}
 	if !isAdmin {
-		return errors.New("forbidden: only admin can update role")
+		return ErrForbidden
 	}
 
 	if newRole != "user" && newRole != "admin" {
-		return errors.New("invalid role: must be 'user' or 'admin'")
+		return ErrInvalidArgument
 	}
 
 	updateData := map[string]interface{}{
@@ -146,12 +158,12 @@ func (s *authService) AddRole(ctx context.Context, adminUserID, targetUserID pri
 func (s *authService) ListUsers(ctx context.Context, filter *model.UserFilter) ([]*model.User, int64, error) {
 	userIDStr, ok := ctx.Value("user_id").(string)
 	if !ok {
-		return nil, 0, errors.New("unauthenticated")
+		return nil, 0, ErrUnauthenticated
 	}
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		return nil, 0, errors.New("invalid user id")
+		return nil, 0, ErrInvalidArgument
 	}
 
 	isAdmin, err := s.IsAdmin(ctx, userID)
@@ -159,7 +171,7 @@ func (s *authService) ListUsers(ctx context.Context, filter *model.UserFilter) (
 		return nil, 0, err
 	}
 	if !isAdmin {
-		return nil, 0, errors.New("forbidden: only admin can list users")
+		return nil, 0, ErrForbidden
 	}
 
 	users, total, err := repository.ListUsers(ctx, filter)
@@ -171,23 +183,21 @@ func (s *authService) ListUsers(ctx context.Context, filter *model.UserFilter) (
 }
 
 func (s *authService) UpdateProfile(ctx context.Context, id primitive.ObjectID, newName, newEmail string) error {
-
 	if newEmail != "" && !utils.ValidEmail(newEmail) {
-		return errors.New("invalid email format")
+		return ErrInvalidArgument
 	}
 
 	updateData := make(map[string]interface{})
 	if newName == "" {
-		return errors.New("Username must not be empty")
+		return ErrInvalidArgument
 	}
 	if newEmail == "" {
-
-		return errors.New("Email must not be empty")
+		return ErrInvalidArgument
 	}
 	updateData["name"] = newName
 	updateData["email"] = newEmail
 	if len(updateData) == 0 {
-		return errors.New("no data to update")
+		return ErrInvalidArgument
 	}
 
 	return repository.UpdateUser(id, updateData)
@@ -196,14 +206,13 @@ func (s *authService) UpdateProfile(ctx context.Context, id primitive.ObjectID, 
 func (s *authService) DeleteProfile(ctx context.Context, userID primitive.ObjectID) error {
 	user, err := repository.GetUserByID(userID)
 	if err != nil {
-		// ถ้า error มาจาก no documents in result แปลงข้อความ error
 		if err.Error() == "mongo: no documents in result" {
-			return errors.New("user not found")
+			return ErrNotFound
 		}
 		return err
 	}
 	if user == nil || user.Deleted {
-		return errors.New("user not found")
+		return ErrNotFound
 	}
 
 	update := map[string]interface{}{
@@ -226,19 +235,18 @@ func (s *authService) GeneratePasswordResetToken(ctx context.Context, userID pri
 		return "", err
 	}
 
-	//  mock ไม่ส่งเมลจริง
 	return token, nil
 }
 
 func (s *authService) ResetPassword(ctx context.Context, resetToken, newPassword string) error {
 	userIDHex, err := utils.ValidateResetToken(resetToken)
 	if err != nil {
-		return err
+		return ErrInvalidArgument
 	}
 
 	userID, err := primitive.ObjectIDFromHex(userIDHex)
 	if err != nil {
-		return err
+		return ErrInvalidArgument
 	}
 
 	hashedPassword, err := utils.HashPassword(newPassword)
