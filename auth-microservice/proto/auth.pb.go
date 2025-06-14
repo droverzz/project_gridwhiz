@@ -239,7 +239,6 @@ func (x *LoginResponse) GetToken() string {
 
 type LogoutRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -272,13 +271,6 @@ func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
 func (*LogoutRequest) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *LogoutRequest) GetToken() string {
-	if x != nil {
-		return x.Token
-	}
-	return ""
 }
 
 type LogoutResponse struct {
@@ -995,7 +987,6 @@ func (x *DeleteProfileResponse) GetSuccess() bool {
 
 type GeneratePasswordResetTokenRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1028,13 +1019,6 @@ func (x *GeneratePasswordResetTokenRequest) ProtoReflect() protoreflect.Message 
 // Deprecated: Use GeneratePasswordResetTokenRequest.ProtoReflect.Descriptor instead.
 func (*GeneratePasswordResetTokenRequest) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *GeneratePasswordResetTokenRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
 }
 
 type GeneratePasswordResetTokenResponse struct {
@@ -1195,9 +1179,8 @@ const file_auth_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"%\n" +
 	"\rLoginResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"%\n" +
-	"\rLogoutRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"*\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\x0f\n" +
+	"\rLogoutRequest\"*\n" +
 	"\x0eLogoutResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"D\n" +
 	"\x15UpdateUserRoleRequest\x12\x17\n" +
@@ -1238,9 +1221,8 @@ const file_auth_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x16\n" +
 	"\x14DeleteProfileRequest\"1\n" +
 	"\x15DeleteProfileResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"<\n" +
-	"!GeneratePasswordResetTokenRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"E\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"#\n" +
+	"!GeneratePasswordResetTokenRequest\"E\n" +
 	"\"GeneratePasswordResetTokenResponse\x12\x1f\n" +
 	"\vreset_token\x18\x01 \x01(\tR\n" +
 	"resetToken\"Z\n" +
