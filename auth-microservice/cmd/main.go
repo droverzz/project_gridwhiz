@@ -39,10 +39,6 @@ func main() {
 		grpc.UnaryInterceptor(middleware.AuthInterceptor),
 	)
 
-	if err := service.CountUsers(context.Background()); err != nil {
-		log.Fatalf("❌ Failed to count users: %v", err)
-	}
-
 	authService := service.NewAuthService()
 	authHandler := handler.NewAuthServiceHandler(authService)
 

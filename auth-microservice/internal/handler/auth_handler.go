@@ -4,6 +4,7 @@ import (
 	"auth-microservice/internal/service"
 	"context"
 	"log"
+	"strings"
 
 	authpb "auth-microservice/proto"
 
@@ -11,6 +12,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -57,7 +59,25 @@ func (s *AuthServiceHandler) Login(ctx context.Context, req *authpb.LoginRequest
 }
 
 func (s *AuthServiceHandler) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
-	err := s.authService.Logout(ctx, req.Token)
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "missing metadata")
+	}
+
+	authHeaders := md["authorization"]
+	if len(authHeaders) == 0 {
+		return nil, status.Errorf(codes.Unauthenticated, "authorization token not provided")
+	}
+
+	tokenString := authHeaders[0]
+	const bearerPrefix = "Bearer "
+	if strings.HasPrefix(tokenString, bearerPrefix) {
+		tokenString = tokenString[len(bearerPrefix):]
+	} else {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid authorization header format")
+	}
+
+	err := s.authService.Logout(ctx, tokenString)
 	if err != nil {
 		log.Printf("Logout failed: %v", err)
 		return nil, status.Errorf(codes.Internal, "logout failed")

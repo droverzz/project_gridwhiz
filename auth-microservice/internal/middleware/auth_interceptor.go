@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	"auth-microservice/internal/repository"
 	"auth-microservice/internal/utils"
 
 	"google.golang.org/grpc"
@@ -43,6 +44,16 @@ func AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServe
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
 	}
+
+	// --- เพิ่มการตรวจสอบ token ใน blacklist ---
+	isBlacklisted, err := repository.IsTokenBlacklisted(tokenString)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error checking token blacklist: %v", err)
+	}
+	if isBlacklisted {
+		return nil, status.Errorf(codes.Unauthenticated, "token has been revoked")
+	}
+	// ---------------------------------------------
 
 	newCtx := context.WithValue(ctx, "user_id", userID)
 	return handler(newCtx, req)
